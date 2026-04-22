@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal Graph Editor</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <div class="field">
+        <label for="nodeCount">x</label>
+        <input id="nodeCount" type="number" min="1" value="6" />
+        <div class="hint">Nodes are 0 to x-1.</div>
+      </div>
+
+      <div class="field">
+        <label for="edgesInput">edges</label>
+        <textarea id="edgesInput">0 2 a</textarea>
+        <div class="hint">
+          One edge per line: <code>from to [label]</code><br />
+          Examples: <code>0 1</code>, <code>2 5 a</code>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="finalNodesInput">final nodes</label>
+        <input id="finalNodesInput" type="text" value="2 5" />
+        <div class="hint">Space or comma separated.</div>
+      </div>
+
+      <button id="renderBtn" type="button">render</button>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="graphCanvas" width="1000" height="700"></canvas>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

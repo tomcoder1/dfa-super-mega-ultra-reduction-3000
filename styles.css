@@ -1,0 +1,69 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: monospace;
+  background: #fff;
+  color: #000;
+}
+
+.app {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  height: 100vh;
+}
+
+.panel {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font: inherit;
+  padding: 8px;
+}
+
+textarea {
+  resize: none;
+  min-height: 180px;
+}
+
+button {
+  cursor: pointer;
+}
+
+.hint {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.canvas-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #000;
+  display: block;
+  background: #fff;
+}

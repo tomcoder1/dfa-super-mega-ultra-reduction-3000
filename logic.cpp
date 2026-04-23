@@ -18,7 +18,7 @@ void printDFA(int const numberOfStates, vector<char> alphabet, vector<vector<int
 
 void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>& isAccessible, int index);
 
-void addNewStateDFS (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state);
+void addNewStateDFA (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state);
 int main() {
     // Input states
     cin >> numberOfStates;
@@ -62,15 +62,11 @@ int main() {
     }
     cout << "\n";
 
-    // -------------------------------------------------------------------------------
-    // Test print
     // printDFA(numberOfStates, alphabet, transitionTable, finalStates);
-    // -------------------------------------------------------------------------------
 
     // 1. update accessibility
     cout << " checking access..." << "\n";
     checkAccessibility(transitionTable, isAccessible, 0);
-
     // 2. mark()
     vector<vector<bool>> distinguishability(numberOfStates, vector<bool>(numberOfStates, false));
     int changes = 0;
@@ -86,7 +82,6 @@ int main() {
             }
         }
     }
-
     cout << "pass >=1..." << "\n";
     while (!flag) {
         for (int i = 0; i < numberOfStates - 1; i++) {
@@ -113,7 +108,6 @@ int main() {
         }
         changes = 0;
     }
-
     // Test print
     // -------------------------------------------------------------------------------
     cout << "-------------------------------------------------------------------------------------\n";
@@ -135,7 +129,6 @@ int main() {
         cout << "\n";
     }
     //-------------------------------------------------------------------------------
-
     // 3. new states for the new DFA
     vector<vector<int>> newDFAStates;
     vector<int> temp;
@@ -155,7 +148,7 @@ int main() {
                 newDFAStates.push_back(temp);
                 temp.clear();
             } else {
-                addNewStateDFS(grouped, isAccessible, distinguishability, temp, i);
+                addNewStateDFA(grouped, isAccessible, distinguishability, temp, i);
                 sort(temp.begin(), temp.end());
                 newDFAStates.push_back(temp);
                 temp.clear();
@@ -163,7 +156,6 @@ int main() {
             distinguiable = true;
         }
     }
-
     // Test print
     cout << "----------------------------------------------------\n";
     cout << "New DFA: " << "\n";
@@ -173,9 +165,6 @@ int main() {
         }
         cout << "\n";
     }
-
-    
-
     return 0;
 }
 
@@ -185,28 +174,23 @@ void printDFA(int const numberOfStates, vector<char> alphabet, vector<vector<int
         cout << "q" << i << " ";
     }
     cout << "}" << "\n";
-
     cout << "sigma = { ";
     for (int i = 0; i < alphabet.size(); i++) {
         cout << alphabet[i] << " ";
     }
     cout << "}" << "\n";
-
     cout << "Transition table: " << "\n";
-
     for (int i = 0; i < numberOfStates; i++) {
         for (int j = 0; j < alphabet.size(); j++)
             cout << transitionTable[i][j] << "  ";
         cout << "\n";
     }
-
     cout << "The final states: ";
     for (auto state : finalStates) {
         cout << state << " ";
     }
     cout << "\n";
 }
-
 void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>& isAccessible, int index) {
     isAccessible[index] = true;
     for (int i = 0; i < numberOfSymbols; i++) {
@@ -216,8 +200,7 @@ void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>
         }
     }
 }
-
-void addNewStateDFS (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state) {
+void addNewStateDFA (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state) {
     if (grouped[state] || !isAccessible[state]) {
         return;
     }
@@ -225,7 +208,7 @@ void addNewStateDFS (vector<bool>& grouped, const vector<bool>& isAccessible, co
     temp.push_back(state);
     for (int i = state + 1; i < numberOfStates; i++) {
         if (isAccessible[i] && !grouped[i] && !distinguishability[i][state]) {
-            addNewStateDFS(grouped, isAccessible, distinguishability, temp, i);
+            addNewStateDFA(grouped, isAccessible, distinguishability, temp, i);
         }
     }
     // DFS

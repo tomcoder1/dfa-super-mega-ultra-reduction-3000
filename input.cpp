@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <map>
 #include <algorithm>
 #include <string>
@@ -15,13 +16,16 @@ int numberOfSymbols;
 
 void printDFA(int const numberOfStates, vector<char> alphabet, vector<vector<int>> const transitionTable, vector<int> const finalStates);
 
-void checkAccessibility(const vector<vector<int>>& transitionTable, vector<pair<bool,bool>>& attributes, int index);
+void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>& isAccessible, int index);
 
+void addNewStateDFS (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state);
 int main() {
     // Input states
     cin >> numberOfStates;
 
-    vector<pair<bool,bool>> attributes(numberOfStates, {false, false}); //attributes[i] = (x,y) with x stands for final, y stands for accessibility
+    vector<bool> isFinal(numberOfStates, false);
+    vector<bool> isAccessible(numberOfStates, false);
+    vector<bool> grouped(numberOfStates, false);
     
     // Input alphabet
     vector<char> alphabet;
@@ -54,7 +58,7 @@ int main() {
     
     while (finalStream >> x) {
         finalStates.push_back(x);
-        attributes[x].first = true;
+        isFinal[x] = true;
     }
     cout << "\n";
 
@@ -65,7 +69,7 @@ int main() {
 
     // 1. update accessibility
     cout << " checking access..." << "\n";
-    checkAccessibility(transitionTable, attributes, 0);
+    checkAccessibility(transitionTable, isAccessible, 0);
 
     // 2. mark()
     vector<vector<bool>> distinguishability(numberOfStates, vector<bool>(numberOfStates, false));
@@ -74,8 +78,10 @@ int main() {
 
     cout << "pass 0..." << "\n";
     for (int i = 0; i < numberOfStates - 1; i++) {
+        if (!isAccessible[i]) continue;
         for (int j = i+1; j < numberOfStates; j++) {
-            if (attributes[i].first != attributes[j].first) {
+            if (!isAccessible[j]) continue;
+            if (isFinal[i] != isFinal[j]) {
                 distinguishability[i][j] = distinguishability[j][i] = true;
             }
         }
@@ -84,10 +90,10 @@ int main() {
     cout << "pass >=1..." << "\n";
     while (!flag) {
         for (int i = 0; i < numberOfStates - 1; i++) {
+            if (!isAccessible[i]) continue;
             for (int j = i+1; j < numberOfStates; j++) {
-                if (distinguishability[i][j]) {
-                    continue;
-                }
+                if (distinguishability[i][j]) continue;
+                if (!isAccessible[j]) continue;
                 for (int k = 0; k < numberOfSymbols; k++) {
                     int temp1 = transitionTable[i][k];
                     int temp2 = transitionTable[j][k];
@@ -110,27 +116,65 @@ int main() {
 
     // Test print
     // -------------------------------------------------------------------------------
-    // cout << "-------------------------------------------------------------------------------------\n";
-    // cout << "attributes: final" << "\n";
-    // // for (int i = 0; i < numberOfStates; i++) {
-    // //     cout << attributes[i].first << " ";
-    // // }
-    // // cout << "\n";
-    // // cout << "attributes: accessability" << "\n";
-    // // for (int i = 0; i < numberOfStates; i++) {
-    // //     cout << attributes[i].second << " ";
-    // // }
-    // // cout << "\n";
-    // // cout << "distinguishability:" << "\n";
-    // // for (int i = 0; i < numberOfStates; i++) {
-    // //     for (int j = 0; j < numberOfStates; j++) {
-    // //         cout << distinguishability[i][j] << " ";
-    // //     }
-    // //     cout << "\n";
-    // // }
-    // -------------------------------------------------------------------------------
+    cout << "-------------------------------------------------------------------------------------\n";
+    cout << "attributes: final" << "\n";
+    for (int i = 0; i < numberOfStates; i++) {
+        cout << isFinal[i] << " ";
+    }
+    cout << "\n";
+    cout << "attributes: accessability" << "\n";
+    for (int i = 0; i < numberOfStates; i++) {
+        cout << isAccessible[i] << " ";
+    }
+    cout << "\n";
+    cout << "distinguishability:" << "\n";
+    for (int i = 0; i < numberOfStates; i++) {
+        for (int j = 0; j < numberOfStates; j++) {
+            cout << distinguishability[i][j] << " ";
+        }
+        cout << "\n";
+    }
+    //-------------------------------------------------------------------------------
 
-    // 3. remove()
+    // 3. new states for the new DFA
+    vector<vector<int>> newDFAStates;
+    vector<int> temp;
+
+    bool distinguiable = true;
+    for (int i = 0; i < numberOfStates; i++) {
+        if (isAccessible[i] && !grouped[i]) {
+            for (int j = 0; j < numberOfStates; j++) {
+                if (i != j && isAccessible[j] && !grouped[j] && !distinguishability[i][j]) {
+                    distinguiable = false;
+                    break;
+                }
+            }
+            if (distinguiable) {
+                grouped[i] = true;
+                temp.push_back(i);
+                newDFAStates.push_back(temp);
+                temp.clear();
+            } else {
+                addNewStateDFS(grouped, isAccessible, distinguishability, temp, i);
+                sort(temp.begin(), temp.end());
+                newDFAStates.push_back(temp);
+                temp.clear();
+            }
+            distinguiable = true;
+        }
+    }
+
+    // Test print
+    cout << "----------------------------------------------------\n";
+    cout << "New DFA: " << "\n";
+    for (int i = 0; i < newDFAStates.size(); i++) {
+        for (int j = 0; j < newDFAStates[i].size(); j++) {
+            cout << newDFAStates[i][j] << " ";
+        }
+        cout << "\n";
+    }
+
+    
 
     return 0;
 }
@@ -163,12 +207,25 @@ void printDFA(int const numberOfStates, vector<char> alphabet, vector<vector<int
     cout << "\n";
 }
 
-void checkAccessibility(const vector<vector<int>>& transitionTable, vector<pair<bool,bool>>& attributes, int index) {
-    attributes[index].second = true;
+void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>& isAccessible, int index) {
+    isAccessible[index] = true;
     for (int i = 0; i < numberOfSymbols; i++) {
         int next = transitionTable[index][i];
-        if (!attributes[next].second) {
-            checkAccessibility(transitionTable, attributes, next);
+        if (!isAccessible[next]) {
+            checkAccessibility(transitionTable, isAccessible, next);
+        }
+    }
+}
+
+void addNewStateDFS (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state) {
+    if (grouped[state] || !isAccessible[state]) {
+        return;
+    }
+    grouped[state] = true;
+    temp.push_back(state);
+    for (int i = state + 1; i < numberOfStates; i++) {
+        if (isAccessible[i] && !grouped[i] && !distinguishability[i][state]) {
+            addNewStateDFS(grouped, isAccessible, distinguishability, temp, i);
         }
     }
     // DFS

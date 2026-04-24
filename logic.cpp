@@ -14,11 +14,22 @@ using namespace std;
 int numberOfStates;
 int numberOfSymbols;
 
-void printDFA(int const numberOfStates, vector<char> alphabet, vector<vector<int>> const transitionTable, vector<int> const finalStates);
+void printDFA(int const numberOfStates, 
+              vector<char> alphabet, 
+              vector<vector<int>> const transitionTable, 
+              vector<int> const finalStates);
 
-void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>& isAccessible, int index);
+void checkAccessibility(const vector<vector<int>>& transitionTable, 
+                        vector<bool>& isAccessible, 
+                        int index);
 
-void addNewStateDFA (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state);
+void addNewStateDFA (vector<bool>& grouped, 
+                     const vector<bool>& isAccessible, 
+                     const vector<vector<bool>>& distinguishability, 
+                     vector<int>& inWhichState, 
+                     vector<int>& temp, 
+                     int state, 
+                     int groupIndex);
 int main() {
     // Input states
     cin >> numberOfStates;
@@ -132,6 +143,8 @@ int main() {
     // 3. new states for the new DFA
     vector<vector<int>> newDFAStates;
     vector<int> temp;
+    vector<int> inWhichState(numberOfStates);
+    int groupIndex = 0;
 
     bool distinguiable = true;
     for (int i = 0; i < numberOfStates; i++) {
@@ -145,30 +158,44 @@ int main() {
             if (distinguiable) {
                 grouped[i] = true;
                 temp.push_back(i);
+                inWhichState[i] = groupIndex;
                 newDFAStates.push_back(temp);
-                temp.clear();
             } else {
-                addNewStateDFA(grouped, isAccessible, distinguishability, temp, i);
+                addNewStateDFA(grouped, isAccessible, distinguishability, inWhichState, temp, i, groupIndex);
                 sort(temp.begin(), temp.end());
                 newDFAStates.push_back(temp);
-                temp.clear();
             }
+            temp.clear();
+            groupIndex++;
             distinguiable = true;
         }
     }
+    int newNumberOfStates = newDFAStates.size();
     // Test print
     cout << "----------------------------------------------------\n";
     cout << "New DFA: " << "\n";
-    for (int i = 0; i < newDFAStates.size(); i++) {
+    for (int i = 0; i < newNumberOfStates; i++) {
         for (int j = 0; j < newDFAStates[i].size(); j++) {
             cout << newDFAStates[i][j] << " ";
         }
         cout << "\n";
     }
+    for (int i = 0; i < numberOfStates; i++) {
+        cout << inWhichState[i] << " ";
+    }
+    cout << "\n";
+    // 4. New DFA 
+    vector<vector<int>> newTransitionTable(newNumberOfStates, vector<int>(numberOfSymbols));
+    vector<int> newFinalStates(newNumberOfStates);
+
+
     return 0;
 }
 
-void printDFA(int const numberOfStates, vector<char> alphabet, vector<vector<int>> const transitionTable, vector<int> const finalStates) {
+void printDFA(int const numberOfStates, 
+              vector<char> alphabet, 
+              vector<vector<int>> const transitionTable, 
+              vector<int> const finalStates) {
     cout << "Q = { ";
     for (int i = 0; i < numberOfStates; i++) {
         cout << "q" << i << " ";
@@ -191,7 +218,9 @@ void printDFA(int const numberOfStates, vector<char> alphabet, vector<vector<int
     }
     cout << "\n";
 }
-void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>& isAccessible, int index) {
+void checkAccessibility(const vector<vector<int>>& transitionTable, 
+                        vector<bool>& isAccessible, 
+                        int index) {
     isAccessible[index] = true;
     for (int i = 0; i < numberOfSymbols; i++) {
         int next = transitionTable[index][i];
@@ -200,15 +229,22 @@ void checkAccessibility(const vector<vector<int>>& transitionTable, vector<bool>
         }
     }
 }
-void addNewStateDFA (vector<bool>& grouped, const vector<bool>& isAccessible, const vector<vector<bool>>& distinguishability, vector<int>& temp, int state) {
+void addNewStateDFA (vector<bool>& grouped, 
+                     const vector<bool>& isAccessible, 
+                     const vector<vector<bool>>& distinguishability, 
+                     vector<int>& inWhichState, 
+                     vector<int>& temp, 
+                     int state, 
+                     int groupIndex) {
     if (grouped[state] || !isAccessible[state]) {
         return;
     }
     grouped[state] = true;
     temp.push_back(state);
+    inWhichState[state] = groupIndex;
     for (int i = state + 1; i < numberOfStates; i++) {
         if (isAccessible[i] && !grouped[i] && !distinguishability[i][state]) {
-            addNewStateDFA(grouped, isAccessible, distinguishability, temp, i);
+            addNewStateDFA(grouped, isAccessible, distinguishability, inWhichState, temp, i, groupIndex);
         }
     }
     // DFS

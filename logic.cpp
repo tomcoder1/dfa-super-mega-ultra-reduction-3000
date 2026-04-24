@@ -186,9 +186,21 @@ int main() {
     cout << "\n";
     // 4. New DFA 
     vector<vector<int>> newTransitionTable(newNumberOfStates, vector<int>(numberOfSymbols));
-    vector<int> newFinalStates(newNumberOfStates);
+    vector<int> newFinalStates;
+    vector<bool> isNewFinal(newNumberOfStates, false);
 
-
+    for (int i = 0; i < newNumberOfStates; i++) {
+        int currentState = newDFAStates[i][0];
+        if (isFinal[currentState]) {
+            isNewFinal[i] = true;
+            newFinalStates.push_back(i);
+        }
+    }
+    //Test print
+    cout << "New final states: " << "\n";
+    for (int i = 0; i < newFinalStates.size(); i++) {
+        cout << newFinalStates[i] << " ";
+    }
     return 0;
 }
 

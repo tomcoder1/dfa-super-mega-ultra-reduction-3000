@@ -1,9 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <stack>
-#include <map>
 #include <algorithm>
-#include <string>
 #include <sstream>
 #include <limits>
 #include <string>
@@ -143,7 +140,7 @@ int main() {
     // 3. new states for the new DFA
     vector<vector<int>> newDFAStates;
     vector<int> temp;
-    vector<int> inWhichState(numberOfStates);
+    vector<int> inWhichState(numberOfStates, -1);
     int groupIndex = 0;
 
     bool distinguiable = true;
@@ -180,6 +177,7 @@ int main() {
         }
         cout << "\n";
     }
+    cout << "In which state: " << "\n";
     for (int i = 0; i < numberOfStates; i++) {
         cout << inWhichState[i] << " ";
     }
@@ -189,6 +187,7 @@ int main() {
     vector<int> newFinalStates;
     vector<bool> isNewFinal(newNumberOfStates, false);
 
+    // a. Generate final states
     for (int i = 0; i < newNumberOfStates; i++) {
         int currentState = newDFAStates[i][0];
         if (isFinal[currentState]) {
@@ -196,10 +195,27 @@ int main() {
             newFinalStates.push_back(i);
         }
     }
-    //Test print
+
+    // b. Generate transition table
+    for (int i = 0; i < numberOfStates; i++) {
+        for (int j = 0; j < numberOfSymbols; j++) {
+            if (isAccessible[i]) {
+                newTransitionTable[inWhichState[i]][j] = inWhichState[transitionTable[i][j]];
+            }
+        }
+    }
+    // Test print
     cout << "New final states: " << "\n";
     for (int i = 0; i < newFinalStates.size(); i++) {
         cout << newFinalStates[i] << " ";
+    }
+    cout << "\n";
+    cout << "New transition table: " << "\n";
+    for (int i = 0; i < newNumberOfStates; i++) {
+        for (int j = 0; j < numberOfSymbols; j++) {
+            cout << newTransitionTable[i][j] << " ";
+        }
+        cout << "\n";
     }
     return 0;
 }
@@ -254,7 +270,7 @@ void addNewStateDFA (vector<bool>& grouped,
     grouped[state] = true;
     temp.push_back(state);
     inWhichState[state] = groupIndex;
-    for (int i = state + 1; i < numberOfStates; i++) {
+    for (int i = 0; i < numberOfStates; i++) {
         if (isAccessible[i] && !grouped[i] && !distinguishability[i][state]) {
             addNewStateDFA(grouped, isAccessible, distinguishability, inWhichState, temp, i, groupIndex);
         }

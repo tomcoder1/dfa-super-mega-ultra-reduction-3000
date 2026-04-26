@@ -1,18 +1,2 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.o
-*.obj
-
-# Executables
 *.exe
-*.out
-*.app
-
-# VS Code local workspace folder
 .vscode/
-
-# Temporary files
-*.tmp
-*.log

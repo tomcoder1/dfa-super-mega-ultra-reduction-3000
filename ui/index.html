@@ -3,41 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minimal Graph Editor</title>
+  <title>DFA Reduction</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app">
-    <div class="panel">
-      <div class="field">
-        <label for="nodeCount">x</label>
-        <input id="nodeCount" type="number" min="1" value="6" />
-        <div class="hint">Nodes are 0 to x-1.</div>
+  <main class="board">
+    <section class="input-panel panel" aria-labelledby="inputTitle">
+      <div class="panel-heading">
+        <h1 id="inputTitle">Input</h1>
       </div>
 
-      <div class="field">
-        <label for="edgesInput">edges</label>
-        <textarea id="edgesInput">0 2 a</textarea>
-        <div class="hint">
-          One edge per line: <code>from to [label]</code><br />
-          Examples: <code>0 1</code>, <code>2 5 a</code>
+      <form id="dfaForm" class="dfa-form">
+        <label class="field compact">
+          <span>Number of states:</span>
+          <input id="stateCount" name="stateCount" type="number" required />
+        </label>
+
+        <label class="field">
+          <span>Alphabet:</span>
+          <input id="alphabet" name="alphabet" type="text" required />
+        </label>
+
+        <label class="field">
+          <span>Transition table:</span>
+          <textarea id="transitionTable" name="transitionTable" spellcheck="false" required></textarea>
+        </label>
+
+        <label class="field">
+          <span>Final states:</span>
+          <input id="finalStates" name="finalStates" type="text" />
+        </label>
+
+        <button id="submitBtn" type="submit">Submit</button>
+      </form>
+    </section>
+
+    <section class="graph-panel panel" aria-labelledby="originalTitle">
+      <div class="panel-heading inline">
+        <p class="eyebrow">Original</p>
+      </div>
+      <canvas id="originalCanvas" width="720" height="720"></canvas>
+    </section>
+
+    <section class="output-panel panel" aria-labelledby="outputTitle">
+      <div class="panel-heading inline">
+        <h2 id="outputTitle">Output</h2>
+      </div>
+
+      <div class="result-stack">
+        <div class="result-block">
+          <span>Inaccessible states:</span>
+          <div id="inaccessibleStates" class="code-block empty">-</div>
+        </div>
+        <div class="result-row">
+          <span>Number of new states</span>
+          <strong id="newStateCount">-</strong>
+        </div>
+        <div class="result-block">
+          <span>Groups of indistinguishable states:</span>
+          <div id="groupsList" class="code-block empty">Submit a DFA to see groups.</div>
+        </div>
+        <div class="result-block">
+          <span>New final states:</span>
+          <div id="newFinalStates" class="code-block empty">-</div>
         </div>
       </div>
+    </section>
 
-      <div class="field">
-        <label for="finalNodesInput">final nodes</label>
-        <input id="finalNodesInput" type="text" value="2 5" />
-        <div class="hint">Space or comma separated.</div>
+    <section class="graph-panel panel" aria-labelledby="reducedTitle">
+      <div class="panel-heading inline">
+        <p class="eyebrow">Reduced</p>
       </div>
+      <canvas id="reducedCanvas" width="720" height="720"></canvas>
+    </section>
+  </main>
 
-      <button id="renderBtn" type="button">render</button>
-    </div>
-
-    <div class="canvas-wrap">
-      <canvas id="graphCanvas" width="1000" height="700"></canvas>
-    </div>
-  </div>
-
+  <script src="graph.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

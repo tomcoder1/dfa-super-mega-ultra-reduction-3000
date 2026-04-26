@@ -5,6 +5,7 @@
 #include <limits>
 #include <string>
 #include <utility>
+#include <cstdio>
 
 using namespace std;
 
@@ -15,6 +16,8 @@ void printDFA(int const numberOfStates,
               vector<char> alphabet, 
               vector<vector<int>> const transitionTable, 
               vector<int> const finalStates);
+
+void returnInvalid();
 
 void checkAccessibility(const vector<vector<int>>& transitionTable, 
                         vector<bool>& isAccessible, 
@@ -27,9 +30,13 @@ void addNewStateDFA (vector<bool>& grouped,
                      vector<int>& temp, 
                      int state, 
                      int groupIndex);
+
 int main() {
+    freopen("data/input.txt", "r", stdin);
+    freopen("data/output.txt", "w", stdout);
     // Input states
     cin >> numberOfStates;
+    if (!cin || numberOfStates <= 0) returnInvalid();
 
     vector<bool> isFinal(numberOfStates, false);
     vector<bool> isAccessible(numberOfStates, false);
@@ -44,15 +51,23 @@ int main() {
     getline(cin, lineAlphabet);
     istringstream alphabetStream(lineAlphabet);
     while (alphabetStream >> ch) {
+        if (find(alphabet.begin(), alphabet.end(), ch) != alphabet.end()) {
+            returnInvalid();
+        }
         alphabet.push_back(ch);
     }
     numberOfSymbols = alphabet.size();
+    if (numberOfSymbols == 0) returnInvalid();
 
     // Input transition table
     vector<vector<int>> transitionTable(numberOfStates, vector<int>(numberOfSymbols));
     for (int i = 0; i < numberOfStates; i++) {
         for (int j = 0; j < numberOfSymbols; j++) {
-            cin >> transitionTable[i][j];
+            if (!(cin >> transitionTable[i][j])) returnInvalid();
+
+            if (transitionTable[i][j] < 0 || transitionTable[i][j] >= numberOfStates) {
+                returnInvalid();
+            }
         }
     }
     // Input final states
@@ -65,9 +80,11 @@ int main() {
     istringstream finalStream(finalLine);
     
     while (finalStream >> x) {
+        if (x < 0 || x >= numberOfStates) returnInvalid();
         finalStates.push_back(x);
         isFinal[x] = true;
     }
+    if (!finalStream.eof()) returnInvalid();
     cout << "\n";
 
     // printDFA(numberOfStates, alphabet, transitionTable, finalStates);
@@ -246,9 +263,14 @@ void printDFA(int const numberOfStates,
     }
     cout << "\n";
 }
+void returnInvalid() {
+    cout << "Invalid input";
+    exit(0);
+}
 void checkAccessibility(const vector<vector<int>>& transitionTable, 
                         vector<bool>& isAccessible, 
                         int index) {
+    if (index < 0 || index >= numberOfStates) returnInvalid();
     isAccessible[index] = true;
     for (int i = 0; i < numberOfSymbols; i++) {
         int next = transitionTable[index][i];

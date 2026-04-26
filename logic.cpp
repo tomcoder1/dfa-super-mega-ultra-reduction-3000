@@ -32,8 +32,8 @@ void addNewStateDFA (vector<bool>& grouped,
                      int groupIndex);
 
 int main() {
-    freopen("data/input.txt", "r", stdin);
-    freopen("data/output.txt", "w", stdout);
+    if (!freopen("data/input.txt", "r", stdin)) return 1;
+    if (!freopen("data/output.txt", "w", stdout)) return 1;
     // Input states
     cin >> numberOfStates;
     if (!cin || numberOfStates <= 0) returnInvalid();
@@ -85,19 +85,17 @@ int main() {
         isFinal[x] = true;
     }
     if (!finalStream.eof()) returnInvalid();
-    cout << "\n";
 
     // printDFA(numberOfStates, alphabet, transitionTable, finalStates);
 
     // 1. update accessibility
-    cout << " checking access..." << "\n";
     checkAccessibility(transitionTable, isAccessible, 0);
     // 2. mark()
     vector<vector<bool>> distinguishability(numberOfStates, vector<bool>(numberOfStates, false));
     int changes = 0;
     bool flag = false;
 
-    cout << "pass 0..." << "\n";
+    // cout << "pass 0..." << "\n";
     for (int i = 0; i < numberOfStates - 1; i++) {
         if (!isAccessible[i]) continue;
         for (int j = i+1; j < numberOfStates; j++) {
@@ -107,7 +105,7 @@ int main() {
             }
         }
     }
-    cout << "pass >=1..." << "\n";
+    // cout << "pass >=1..." << "\n";
     while (!flag) {
         for (int i = 0; i < numberOfStates - 1; i++) {
             if (!isAccessible[i]) continue;
@@ -133,43 +131,22 @@ int main() {
         }
         changes = 0;
     }
-    // Test print
-    // -------------------------------------------------------------------------------
-    cout << "-------------------------------------------------------------------------------------\n";
-    cout << "attributes: final" << "\n";
-    for (int i = 0; i < numberOfStates; i++) {
-        cout << isFinal[i] << " ";
-    }
-    cout << "\n";
-    cout << "attributes: accessability" << "\n";
-    for (int i = 0; i < numberOfStates; i++) {
-        cout << isAccessible[i] << " ";
-    }
-    cout << "\n";
-    cout << "distinguishability:" << "\n";
-    for (int i = 0; i < numberOfStates; i++) {
-        for (int j = 0; j < numberOfStates; j++) {
-            cout << distinguishability[i][j] << " ";
-        }
-        cout << "\n";
-    }
-    //-------------------------------------------------------------------------------
     // 3. new states for the new DFA
     vector<vector<int>> newDFAStates;
     vector<int> temp;
     vector<int> inWhichState(numberOfStates, -1);
     int groupIndex = 0;
 
-    bool distinguiable = true;
+    bool distinguishable = true;
     for (int i = 0; i < numberOfStates; i++) {
         if (isAccessible[i] && !grouped[i]) {
             for (int j = 0; j < numberOfStates; j++) {
                 if (i != j && isAccessible[j] && !grouped[j] && !distinguishability[i][j]) {
-                    distinguiable = false;
+                    distinguishable = false;
                     break;
                 }
             }
-            if (distinguiable) {
+            if (distinguishable) {
                 grouped[i] = true;
                 temp.push_back(i);
                 inWhichState[i] = groupIndex;
@@ -181,24 +158,10 @@ int main() {
             }
             temp.clear();
             groupIndex++;
-            distinguiable = true;
+            distinguishable = true;
         }
     }
     int newNumberOfStates = newDFAStates.size();
-    // Test print
-    cout << "----------------------------------------------------\n";
-    cout << "New DFA: " << "\n";
-    for (int i = 0; i < newNumberOfStates; i++) {
-        for (int j = 0; j < newDFAStates[i].size(); j++) {
-            cout << newDFAStates[i][j] << " ";
-        }
-        cout << "\n";
-    }
-    cout << "In which state: " << "\n";
-    for (int i = 0; i < numberOfStates; i++) {
-        cout << inWhichState[i] << " ";
-    }
-    cout << "\n";
     // 4. New DFA 
     vector<vector<int>> newTransitionTable(newNumberOfStates, vector<int>(numberOfSymbols));
     vector<int> newFinalStates;
@@ -214,26 +177,50 @@ int main() {
     }
 
     // b. Generate transition table
-    for (int i = 0; i < numberOfStates; i++) {
+    for (int i = 0; i < newNumberOfStates; i++) {
+        int a = newDFAStates[i][0];
         for (int j = 0; j < numberOfSymbols; j++) {
-            if (isAccessible[i]) {
-                newTransitionTable[inWhichState[i]][j] = inWhichState[transitionTable[i][j]];
+            if (isAccessible[a]) {
+                if (inWhichState[transitionTable[a][j]] == -1) returnInvalid();
+                newTransitionTable[inWhichState[a]][j] = inWhichState[transitionTable[a][j]];
             }
         }
     }
-    // Test print
-    cout << "New final states: " << "\n";
-    for (int i = 0; i < newFinalStates.size(); i++) {
-        cout << newFinalStates[i] << " ";
+
+    // 5. Output
+    int counter = 0;
+    for (int i = 0; i < numberOfStates; i++) {
+        if (!isAccessible[i]) {
+            counter++;
+            cout << i << " ";
+        }
     }
+    if (counter == 0) cout << -1;
     cout << "\n";
-    cout << "New transition table: " << "\n";
+    cout << newNumberOfStates << "\n";
+    for (int i = 0; i < newNumberOfStates; i++) {
+        int row = newDFAStates[i].size();
+        for (int j = 0; j < row; j++) {
+            cout << newDFAStates[i][j] << " ";
+        }
+        cout << "\n";
+    }
     for (int i = 0; i < newNumberOfStates; i++) {
         for (int j = 0; j < numberOfSymbols; j++) {
             cout << newTransitionTable[i][j] << " ";
         }
         cout << "\n";
     }
+    for (int i = 0; i < newFinalStates.size(); i++) {
+        cout << newFinalStates[i] << " ";
+    }
+
+    // output description:
+    // first line: inaccessible states (cout -1 when no inaccessible)
+    // second line: new number of states
+    // next {new number of states} lines: groups of old states
+    // next {new number of states} lines: new transition table, with symbols same as before
+    // final line: final states
     return 0;
 }
 
@@ -264,7 +251,7 @@ void printDFA(int const numberOfStates,
     cout << "\n";
 }
 void returnInvalid() {
-    cout << "Invalid input";
+    cout << "Invalid input\n";
     exit(0);
 }
 void checkAccessibility(const vector<vector<int>>& transitionTable, 
@@ -274,6 +261,7 @@ void checkAccessibility(const vector<vector<int>>& transitionTable,
     isAccessible[index] = true;
     for (int i = 0; i < numberOfSymbols; i++) {
         int next = transitionTable[index][i];
+        if (next < 0 || next >= numberOfStates) returnInvalid();
         if (!isAccessible[next]) {
             checkAccessibility(transitionTable, isAccessible, next);
         }

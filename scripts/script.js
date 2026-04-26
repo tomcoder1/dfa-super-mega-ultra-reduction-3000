@@ -137,7 +137,7 @@ function renderOutput(result) {
 
 async function reduceDFA(dfa) {
   if (window.location.protocol === "file:") {
-    throw new Error("Open http://localhost:3000/ instead of opening ui/index.html directly.");
+    throw new Error("Open http://localhost:3000/ instead of opening index.html directly.");
   }
 
   const response = await fetch("/api/reduce", {

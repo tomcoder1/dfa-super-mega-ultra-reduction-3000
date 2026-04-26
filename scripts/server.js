@@ -3,8 +3,9 @@ const fs = require("fs/promises");
 const path = require("path");
 const { execFile } = require("child_process");
 
-const uiDir = __dirname;
-const rootDir = path.resolve(uiDir, "..");
+const scriptsDir = __dirname;
+const rootDir = path.resolve(scriptsDir, "..");
+const publicDir = rootDir;
 const inputPath = path.join(rootDir, "data", "input.txt");
 const outputPath = path.join(rootDir, "data", "output.txt");
 const executablePath = path.join(rootDir, "logic.exe");
@@ -79,9 +80,9 @@ async function handleReduce(req, res) {
 async function serveStatic(req, res) {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname;
-  const filePath = path.normalize(path.join(uiDir, pathname));
+  const filePath = path.normalize(path.join(publicDir, pathname));
 
-  if (!filePath.startsWith(uiDir)) {
+  if (!filePath.startsWith(publicDir)) {
     send(res, 403, "Forbidden");
     return;
   }

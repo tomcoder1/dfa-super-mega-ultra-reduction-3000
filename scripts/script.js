@@ -105,6 +105,7 @@ function resetOutput() {
   inaccessibleEl.textContent = "-";
   inaccessibleEl.classList.add("empty");
   newStateCountEl.textContent = "-";
+  newStateCountEl.classList.add("empty");
   groupsListEl.textContent = "-";
   groupsListEl.classList.add("empty");
   newFinalStatesEl.textContent = "-";
@@ -127,6 +128,7 @@ function renderOutput(result) {
   inaccessibleEl.innerHTML = result.inaccessibleStates.length ? formatStateSet(result.inaccessibleStates) : "0";
   inaccessibleEl.classList.remove("empty");
   newStateCountEl.textContent = result.newStateCount;
+  newStateCountEl.classList.remove("empty");
   groupsListEl.innerHTML = result.groups
     .map((group, index) => `<div>${formatState(index)} = ${formatStateSet(group)}</div>`)
     .join("");

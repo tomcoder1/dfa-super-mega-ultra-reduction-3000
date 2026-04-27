@@ -17,15 +17,13 @@ body {
   min-height: 100vh;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ink);
-  background-color: #fbfbfa;
-  background-image: radial-gradient(#d9d9d6 1px, transparent 1px);
-  background-size: 18px 18px;
+  background: #fff;
 }
 
 .board {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(220px, 0.85fr) minmax(280px, 1.1fr) minmax(260px, 1fr) minmax(280px, 1.1fr);
+  grid-template-columns: minmax(190px, 0.7fr) minmax(340px, 1.35fr) minmax(190px, 0.7fr) minmax(340px, 1.35fr);
   gap: 20px;
   padding: 28px;
   align-items: stretch;
@@ -37,7 +35,7 @@ body {
 
 .input-panel,
 .output-panel {
-  align-self: center;
+  align-self: start;
 }
 
 .panel-heading {
@@ -97,6 +95,11 @@ h2 {
 
 .field.compact input {
   grid-column: 2;
+}
+
+.field small {
+  color: var(--accent-dark);
+  font-weight: 700;
 }
 
 input,
@@ -167,12 +170,10 @@ canvas {
   align-items: center;
 }
 
-.result-row strong {
+.result-row .code-block {
   min-width: 74px;
-  padding: 8px 10px;
-  border-bottom: 2px solid var(--ink);
-  text-align: center;
-  font-family: "Cascadia Mono", Consolas, monospace;
+  padding-top: 0;
+  text-align: right;
 }
 
 .code-block {
@@ -189,7 +190,7 @@ canvas {
 }
 
 .code-block.empty {
-  color: var(--muted);
+  color: var(--ink);
 }
 
 .math-state {
@@ -215,7 +216,7 @@ canvas {
 
 @media (max-width: 1180px) {
   .board {
-    grid-template-columns: minmax(230px, 0.9fr) minmax(320px, 1.2fr);
+    grid-template-columns: minmax(210px, 0.75fr) minmax(360px, 1.35fr);
   }
 
   .output-panel {

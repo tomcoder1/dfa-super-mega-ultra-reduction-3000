@@ -15,8 +15,8 @@
 
       <form id="dfaForm" class="dfa-form">
         <label class="field compact">
-          <span>Number of states:</span>
-          <input id="stateCount" name="stateCount" type="number" required />
+          <span>Number of states:<br /><small>(consider initial state is q0)</small></span>
+          <input id="stateCount" name="stateCount" required />
         </label>
 
         <label class="field">
@@ -25,7 +25,7 @@
         </label>
 
         <label class="field">
-          <span>Transition table:</span>
+          <span>Transition table:<br/><small>Input values from 0 to {number of states - 1}</small></span>
           <textarea id="transitionTable" name="transitionTable" spellcheck="false" required></textarea>
         </label>
 
@@ -51,19 +51,19 @@
       </div>
 
       <div class="result-stack">
-        <div class="result-block">
+        <div class="result-row">
           <span>Inaccessible states:</span>
           <div id="inaccessibleStates" class="code-block empty">-</div>
         </div>
         <div class="result-row">
           <span>Number of new states:</span>
-          <strong id="newStateCount">-</strong>
+          <div id="newStateCount" class="code-block empty">-</div>
         </div>
         <div class="result-block">
           <span>Groups of indistinguishable states:</span>
           <div id="groupsList" class="code-block empty">Submit a DFA to see groups.</div>
         </div>
-        <div class="result-block">
+        <div class="result-row">
           <span>New final states:</span>
           <div id="newFinalStates" class="code-block empty">-</div>
         </div>

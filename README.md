@@ -2,7 +2,7 @@
 
 A small web app to reduce a deterministic finite automaton.
 
-### How to run:
+### How to run
 
 Clone the repo:
 ```sh

@@ -17,6 +17,8 @@ void printDFA(int const numberOfStates,
               vector<vector<int>> const transitionTable, 
               vector<int> const finalStates);
 
+void returnInvalid();
+
 void checkAccessibility(const vector<vector<int>>& transitionTable, 
                         vector<bool>& isAccessible, 
                         int index);
@@ -34,6 +36,7 @@ int main() {
     if (!freopen("data/output.txt", "w", stdout)) return 1;
     // Input states
     cin >> numberOfStates;
+    if (!cin || numberOfStates <= 0) returnInvalid();
 
     vector<bool> isFinal(numberOfStates, false);
     vector<bool> isAccessible(numberOfStates, false);
@@ -48,15 +51,23 @@ int main() {
     getline(cin, lineAlphabet);
     istringstream alphabetStream(lineAlphabet);
     while (alphabetStream >> ch) {
+        if (find(alphabet.begin(), alphabet.end(), ch) != alphabet.end()) {
+            returnInvalid();
+        }
         alphabet.push_back(ch);
     }
     numberOfSymbols = alphabet.size();
+    if (numberOfSymbols == 0) returnInvalid();
 
     // Input transition table
     vector<vector<int>> transitionTable(numberOfStates, vector<int>(numberOfSymbols));
     for (int i = 0; i < numberOfStates; i++) {
         for (int j = 0; j < numberOfSymbols; j++) {
-            cin >> transitionTable[i][j];
+            if (!(cin >> transitionTable[i][j])) returnInvalid();
+
+            if (transitionTable[i][j] < 0 || transitionTable[i][j] >= numberOfStates) {
+                returnInvalid();
+            }
         }
     }
     // Input final states
@@ -69,9 +80,11 @@ int main() {
     istringstream finalStream(finalLine);
     
     while (finalStream >> x) {
+        if (x < 0 || x >= numberOfStates) returnInvalid();
         finalStates.push_back(x);
         isFinal[x] = true;
     }
+    if (!finalStream.eof()) returnInvalid();
 
     // printDFA(numberOfStates, alphabet, transitionTable, finalStates);
 
@@ -170,6 +183,7 @@ int main() {
         int a = newDFAStates[i][0];
         for (int j = 0; j < numberOfSymbols; j++) {
             if (isAccessible[a]) {
+                if (inWhichState[transitionTable[a][j]] == -1) returnInvalid();
                 newTransitionTable[inWhichState[a]][j] = inWhichState[transitionTable[a][j]];
             }
         }
@@ -216,7 +230,7 @@ int main() {
     // next {new number of states} lines: groups of old states
     // next {new number of states} lines: new transition table, with symbols same as before
     // next line: final states
-    // next {number of states} line: distinguishability 
+    // next {number of states - 1} line: distinguishability 
     return 0;
 }
 
@@ -246,12 +260,18 @@ void printDFA(int const numberOfStates,
     }
     cout << "\n";
 }
+void returnInvalid() {
+    cout << "Invalid input\n";
+    exit(0);
+}
 void checkAccessibility(const vector<vector<int>>& transitionTable, 
                         vector<bool>& isAccessible, 
                         int index) {
+    if (index < 0 || index >= numberOfStates) returnInvalid();
     isAccessible[index] = true;
     for (int i = 0; i < numberOfSymbols; i++) {
         int next = transitionTable[index][i];
+        if (next < 0 || next >= numberOfStates) returnInvalid();
         if (!isAccessible[next]) {
             checkAccessibility(transitionTable, isAccessible, next);
         }

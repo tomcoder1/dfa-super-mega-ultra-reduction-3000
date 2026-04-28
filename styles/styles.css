@@ -38,6 +38,18 @@ body {
   align-self: start;
 }
 
+.distinguishability-panel {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-top: 18vh;
+}
+
+.distinguishability-panel small {
+  color: var(--accent-dark);
+  font-size: 0.68em;
+  font-weight: 700;
+}
+
 .panel-heading {
   margin-bottom: 16px;
 }
@@ -144,14 +156,14 @@ button:disabled {
 .graph-panel {
   display: flex;
   flex-direction: column;
-  min-height: 560px;
+  min-height: 680px;
 }
 
 canvas {
   display: block;
   width: 100%;
   flex: 1;
-  min-height: 520px;
+  min-height: 640px;
   border: 2px solid var(--ink);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.94);
@@ -208,6 +220,52 @@ canvas {
 
 .math-symbol {
   font-family: "Cambria Math", Cambria, Georgia, serif;
+}
+
+.distinguishability-board {
+  display: grid;
+  gap: 9px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 8px 0 12px;
+}
+
+.distinguishability-board.empty {
+  display: block;
+  font-family: "Cambria Math", Cambria, Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.distinguishability-row {
+  display: flex;
+  gap: 12px;
+  min-width: max-content;
+}
+
+.distinguishability-cell {
+  display: grid;
+  grid-template-columns: auto 22px;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 102px;
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--line);
+  font-family: "Cambria Math", Cambria, Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.distinguishability-pair {
+  white-space: nowrap;
+}
+
+.distinguishability-value {
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: right;
 }
 
 .error-text {

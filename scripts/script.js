@@ -10,6 +10,7 @@ const finalStatesInput = $("finalStates");
 const inaccessibleEl = $("inaccessibleStates");
 const newStateCountEl = $("newStateCount");
 const groupsListEl = $("groupsList");
+const distinguishabilityBoardEl = $("distinguishabilityBoard");
 const newFinalStatesEl = $("newFinalStates");
 
 const originalGraph = DFAGraph.create($("originalCanvas"));
@@ -64,7 +65,23 @@ function buildInputText(dfa) {
   ].join("\n");
 }
 
-function parseOutput(text, alphabet) {
+function parseDistinguishabilityBoard(lines, stateCount) {
+  const expectedRowCount = Math.max(0, stateCount - 1);
+  if (expectedRowCount === 0) return [];
+  if (lines.length < expectedRowCount) return [];
+
+  const board = [];
+  for (let rowIndex = 0; rowIndex < expectedRowCount; rowIndex++) {
+    const row = tokens(lines[rowIndex] || "").map(Number);
+    const expectedLength = stateCount - rowIndex - 1;
+    if (row.length !== expectedLength || row.some((value) => !Number.isInteger(value))) return [];
+    board.push(row);
+  }
+
+  return board;
+}
+
+function parseOutput(text, alphabet, originalStateCount) {
   if (text.trim() === "Invalid input") return { valid: false };
 
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -88,7 +105,11 @@ function parseOutput(text, alphabet) {
     newStateCount,
     groups,
     transitions,
-    finalStates: tokens(lines[transitionStart + newStateCount] || "").map(Number)
+    finalStates: tokens(lines[transitionStart + newStateCount] || "").map(Number),
+    distinguishabilityBoard: parseDistinguishabilityBoard(
+      lines.slice(transitionStart + newStateCount + 1),
+      originalStateCount
+    )
   };
 }
 
@@ -108,6 +129,8 @@ function resetOutput() {
   newStateCountEl.classList.add("empty");
   groupsListEl.textContent = "-";
   groupsListEl.classList.add("empty");
+  distinguishabilityBoardEl.textContent = "-";
+  distinguishabilityBoardEl.classList.add("empty");
   newFinalStatesEl.textContent = "-";
   newFinalStatesEl.classList.add("empty");
   originalGraph.reset();
@@ -124,6 +147,28 @@ function formatStateSet(states) {
     : `<span class="math-symbol">&empty;</span>`;
 }
 
+function renderDistinguishabilityBoard(board) {
+  if (!board.length) {
+    distinguishabilityBoardEl.textContent = "-";
+    distinguishabilityBoardEl.classList.add("empty");
+    return;
+  }
+
+  distinguishabilityBoardEl.innerHTML = board
+    .map((row, rowIndex) => `
+      <div class="distinguishability-row">
+        ${row.map((value, columnIndex) => `
+          <div class="distinguishability-cell">
+            <span class="distinguishability-pair">(${formatState(rowIndex)}, ${formatState(rowIndex + columnIndex + 1)})</span>
+            <span class="distinguishability-value">${value}</span>
+          </div>
+        `).join("")}
+      </div>
+    `)
+    .join("");
+  distinguishabilityBoardEl.classList.remove("empty");
+}
+
 function renderOutput(result) {
   inaccessibleEl.innerHTML = result.inaccessibleStates.length ? formatStateSet(result.inaccessibleStates) : "0";
   inaccessibleEl.classList.remove("empty");
@@ -133,6 +178,7 @@ function renderOutput(result) {
     .map((group, index) => `<div>${formatState(index)} = ${formatStateSet(group)}</div>`)
     .join("");
   groupsListEl.classList.remove("empty");
+  renderDistinguishabilityBoard(result.distinguishabilityBoard);
   newFinalStatesEl.innerHTML = `<span class="math-state">F</span> = ${formatStateSet(result.finalStates)}`;
   newFinalStatesEl.classList.remove("empty");
 }
@@ -183,7 +229,7 @@ form.addEventListener("submit", async (event) => {
       return;
     }
 
-    const output = parseOutput((await reduceDFA(inputDFA)).output, inputDFA.alphabet);
+    const output = parseOutput((await reduceDFA(inputDFA)).output, inputDFA.alphabet, inputDFA.stateCount);
     if (!output.valid) {
       clearInputs();
       resetOutput();

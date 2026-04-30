@@ -1,214 +1,142 @@
 const $ = (id) => document.getElementById(id);
-
-const form = $("dfaForm");
-const submitBtn = $("submitBtn");
-const stateCountInput = $("stateCount");
-const alphabetInput = $("alphabet");
-const transitionInput = $("transitionTable");
-const finalStatesInput = $("finalStates");
-
-const inaccessibleEl = $("inaccessibleStates");
-const newStateCountEl = $("newStateCount");
-const groupsListEl = $("groupsList");
-const distinguishabilityBoardEl = $("distinguishabilityBoard");
-const newFinalStatesEl = $("newFinalStates");
+const ids = [
+  "dfaForm", "submitBtn", "stateCount", "alphabet", "transitionTable", "finalStates",
+  "inaccessibleStates", "newStateCount", "groupsList", "distinguishabilityBoard", "newFinalStates"
+];
+const [
+  form, submitBtn, stateCountInput, alphabetInput, transitionInput, finalStatesInput,
+  inaccessibleEl, newStateCountEl, groupsListEl, distinguishabilityBoardEl, newFinalStatesEl
+] = ids.map($);
 
 const originalGraph = DFAGraph.create($("originalCanvas"));
 const reducedGraph = DFAGraph.create($("reducedCanvas"));
-const qLabel = DFAGraph.qLabel;
-
 let lastOriginalDFA = null;
 let lastReducedDFA = null;
 
-function tokens(text) {
-  return text.trim().split(/\s+/).filter(Boolean);
-}
-
-function parseNumberList(text) {
-  if (!text.trim()) return [];
-  const values = tokens(text).map(Number);
-  if (values.some((value) => !Number.isInteger(value))) throw new Error();
-  return values;
-}
+const tokens = (text) => text.trim().split(/\s+/).filter(Boolean);
+const numbers = (text) => text.trim() ? tokens(text).map(Number) : [];
+const assert = (condition) => { if (!condition) throw new Error(); };
 
 function parseInputDFA() {
   const stateCount = Number(stateCountInput.value);
   const alphabet = tokens(alphabetInput.value);
-  const finalStates = parseNumberList(finalStatesInput.value);
-  const transitions = transitionInput.value
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => tokens(line).map(Number));
+  const finalStates = [...new Set(numbers(finalStatesInput.value))];
+  const transitions = transitionInput.value.split(/\r?\n/)
+    .map((line) => line.trim()).filter(Boolean)
+    .map((line) => numbers(line));
 
-  if (!Number.isInteger(stateCount) || stateCount <= 0) throw new Error();
-  if (alphabet.length === 0 || new Set(alphabet).size !== alphabet.length) throw new Error();
-  if (transitions.length !== stateCount) throw new Error();
-
-  for (const row of transitions) {
-    if (row.length !== alphabet.length) throw new Error();
-    if (row.some((state) => !Number.isInteger(state) || state < 0 || state >= stateCount)) {
-      throw new Error();
-    }
-  }
-
-  if (finalStates.some((state) => state < 0 || state >= stateCount)) throw new Error();
-  return { stateCount, alphabet, transitions, finalStates: [...new Set(finalStates)] };
+  assert(Number.isInteger(stateCount) && stateCount > 0);
+  assert(alphabet.length && new Set(alphabet).size === alphabet.length);
+  assert(transitions.length === stateCount);
+  assert(finalStates.every((state) => Number.isInteger(state) && state >= 0 && state < stateCount));
+  transitions.forEach((row) => {
+    assert(row.length === alphabet.length);
+    assert(row.every((state) => Number.isInteger(state) && state >= 0 && state < stateCount));
+  });
+  return { stateCount, alphabet, transitions, finalStates };
 }
 
-function buildInputText(dfa) {
-  return [
-    dfa.stateCount,
-    dfa.alphabet.join(" "),
-    ...dfa.transitions.map((row) => row.join(" ")),
-    dfa.finalStates.join(" ")
-  ].join("\n");
-}
+function parseBoard(lines, stateCount) {
+  const expectedRows = Math.max(0, stateCount - 1);
+  if (lines.length < expectedRows) return [];
 
-function parseDistinguishabilityBoard(lines, stateCount) {
-  const expectedRowCount = Math.max(0, stateCount - 1);
-  if (expectedRowCount === 0) return [];
-  if (lines.length < expectedRowCount) return [];
-
-  const board = [];
-  for (let rowIndex = 0; rowIndex < expectedRowCount; rowIndex++) {
-    const row = tokens(lines[rowIndex] || "").map(Number);
-    const expectedLength = stateCount - rowIndex - 1;
-    if (row.length !== expectedLength || row.some((value) => !Number.isInteger(value))) return [];
-    board.push(row);
-  }
-
-  return board;
+  const board = Array.from({ length: expectedRows }, (_, i) => {
+    const row = numbers(lines[i] || "");
+    return row.length === stateCount - i - 1 && row.every(Number.isInteger) ? row : null;
+  });
+  return board.every(Boolean) ? board : [];
 }
 
 function parseOutput(text, alphabet, originalStateCount) {
   if (text.trim() === "Invalid input") return { valid: false };
 
-  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const lines = text.split(/\r?\n/).map((line) => line.trim());
+  while (lines[lines.length - 1] === "") lines.pop();
   const newStateCount = Number(lines[1]);
+  const transitionStart = 2 + newStateCount;
   if (lines.length < 2 || !Number.isInteger(newStateCount) || newStateCount < 0) return { valid: false };
 
-  const groups = [];
-  const transitions = [];
-  const transitionStart = 2 + newStateCount;
-
-  for (let i = 0; i < newStateCount; i++) groups.push(tokens(lines[2 + i] || "").map(Number));
-  for (let i = 0; i < newStateCount; i++) {
-    const row = tokens(lines[transitionStart + i] || "").map(Number);
-    if (row.length !== alphabet.length) return { valid: false };
-    transitions.push(row);
-  }
+  const transitions = Array.from({ length: newStateCount }, (_, i) => numbers(lines[transitionStart + i] || ""));
+  if (transitions.some((row) => row.length !== alphabet.length)) return { valid: false };
 
   return {
     valid: true,
-    inaccessibleStates: lines[0] === "-1" ? [] : tokens(lines[0]).map(Number),
+    inaccessibleStates: lines[0] === "-1" ? [] : numbers(lines[0]),
     newStateCount,
-    groups,
+    groups: Array.from({ length: newStateCount }, (_, i) => numbers(lines[2 + i] || "")),
     transitions,
-    finalStates: tokens(lines[transitionStart + newStateCount] || "").map(Number),
-    distinguishabilityBoard: parseDistinguishabilityBoard(
-      lines.slice(transitionStart + newStateCount + 1),
-      originalStateCount
-    )
+    finalStates: numbers(lines[transitionStart + newStateCount] || ""),
+    distinguishabilityBoard: parseBoard(lines.slice(transitionStart + newStateCount + 1), originalStateCount)
   };
 }
 
-function clearInputs() {
-  stateCountInput.value = "";
-  alphabetInput.value = "";
-  transitionInput.value = "";
-  finalStatesInput.value = "";
-}
-
 function resetOutput() {
-  lastOriginalDFA = null;
-  lastReducedDFA = null;
-  inaccessibleEl.textContent = "-";
-  inaccessibleEl.classList.add("empty");
-  newStateCountEl.textContent = "-";
-  newStateCountEl.classList.add("empty");
-  groupsListEl.textContent = "-";
-  groupsListEl.classList.add("empty");
-  distinguishabilityBoardEl.textContent = "-";
-  distinguishabilityBoardEl.classList.add("empty");
-  newFinalStatesEl.textContent = "-";
-  newFinalStatesEl.classList.add("empty");
+  lastOriginalDFA = lastReducedDFA = null;
+  [inaccessibleEl, newStateCountEl, groupsListEl, distinguishabilityBoardEl, newFinalStatesEl].forEach((el) => {
+    el.textContent = "-";
+    el.classList.add("empty");
+  });
   originalGraph.reset();
   reducedGraph.reset();
 }
 
-function formatState(state) {
-  return `<span class="math-state">q<sub>${state}</sub></span>`;
+const stateHtml = (state) => `<span class="math-state">q<sub>${state}</sub></span>`;
+const setHtml = (states) => states.length
+  ? `<span class="math-set">{ ${states.map(stateHtml).join(", ")} }</span>`
+  : `<span class="math-symbol">&empty;</span>`;
+
+function fill(el, html) {
+  el.innerHTML = html;
+  el.classList.remove("empty");
 }
 
-function formatStateSet(states) {
-  return states.length
-    ? `<span class="math-set">{ ${states.map(formatState).join(", ")} }</span>`
-    : `<span class="math-symbol">&empty;</span>`;
-}
+function renderOutput(result) {
+  fill(inaccessibleEl, result.inaccessibleStates.length ? setHtml(result.inaccessibleStates) : "0");
+  fill(newStateCountEl, result.newStateCount);
+  fill(groupsListEl, result.groups.map((group, i) => `<div>${stateHtml(i)} = ${setHtml(group)}</div>`).join(""));
+  fill(newFinalStatesEl, `<span class="math-state">F</span> = ${setHtml(result.finalStates)}`);
 
-function renderDistinguishabilityBoard(board) {
-  if (!board.length) {
+  if (!result.distinguishabilityBoard.length) {
     distinguishabilityBoardEl.textContent = "-";
     distinguishabilityBoardEl.classList.add("empty");
     return;
   }
 
-  distinguishabilityBoardEl.innerHTML = board
-    .map((row, rowIndex) => `
-      <div class="distinguishability-row">
-        ${row.map((value, columnIndex) => `
-          <div class="distinguishability-cell">
-            <span class="distinguishability-pair">(${formatState(rowIndex)}, ${formatState(rowIndex + columnIndex + 1)})</span>
-            <span class="distinguishability-value">${value}</span>
-          </div>
-        `).join("")}
-      </div>
-    `)
-    .join("");
-  distinguishabilityBoardEl.classList.remove("empty");
-}
-
-function renderOutput(result) {
-  inaccessibleEl.innerHTML = result.inaccessibleStates.length ? formatStateSet(result.inaccessibleStates) : "0";
-  inaccessibleEl.classList.remove("empty");
-  newStateCountEl.textContent = result.newStateCount;
-  newStateCountEl.classList.remove("empty");
-  groupsListEl.innerHTML = result.groups
-    .map((group, index) => `<div>${formatState(index)} = ${formatStateSet(group)}</div>`)
-    .join("");
-  groupsListEl.classList.remove("empty");
-  renderDistinguishabilityBoard(result.distinguishabilityBoard);
-  newFinalStatesEl.innerHTML = `<span class="math-state">F</span> = ${formatStateSet(result.finalStates)}`;
-  newFinalStatesEl.classList.remove("empty");
+  fill(distinguishabilityBoardEl, result.distinguishabilityBoard.map((row, i) => `
+    <div class="distinguishability-row">
+      ${row.map((value, j) => `
+        <div class="distinguishability-cell">
+          <span class="distinguishability-pair">(${stateHtml(i)}, ${stateHtml(i + j + 1)})</span>
+          <span class="distinguishability-value">${value}</span>
+        </div>
+      `).join("")}
+    </div>
+  `).join(""));
 }
 
 async function reduceDFA(dfa) {
-  if (window.location.protocol === "file:") {
-    throw new Error("Open http://localhost:3000/ instead of opening index.html directly.");
-  }
-
+  if (location.protocol === "file:") throw new Error("Open http://localhost:3000/ instead of opening index.html directly.");
+  const input = [dfa.stateCount, dfa.alphabet.join(" "), ...dfa.transitions.map((row) => row.join(" ")), dfa.finalStates.join(" ")].join("\n");
   const response = await fetch("/api/reduce", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: buildInputText(dfa) })
+    body: JSON.stringify({ input })
   });
-
   if (!response.ok) throw new Error(await response.text() || "Could not run logic.exe.");
   return response.json();
 }
 
+function invalidInput() {
+  [stateCountInput, alphabetInput, transitionInput, finalStatesInput].forEach((input) => { input.value = ""; });
+  resetOutput();
+  alert("Input is invalid!");
+}
+
 function renderGraphs(inputDFA, output) {
   lastOriginalDFA = inputDFA;
-  lastReducedDFA = {
-    stateCount: output.newStateCount,
-    alphabet: inputDFA.alphabet,
-    transitions: output.transitions,
-    finalStates: output.finalStates
-  };
-
-  originalGraph.draw(lastOriginalDFA, qLabel, true);
-  reducedGraph.draw(lastReducedDFA, qLabel, true);
+  lastReducedDFA = { stateCount: output.newStateCount, alphabet: inputDFA.alphabet, transitions: output.transitions, finalStates: output.finalStates };
+  originalGraph.draw(lastOriginalDFA, DFAGraph.qLabel);
+  reducedGraph.draw(lastReducedDFA, DFAGraph.qLabel);
   originalGraph.startPhysics();
   reducedGraph.startPhysics();
 }
@@ -219,37 +147,22 @@ form.addEventListener("submit", async (event) => {
   submitBtn.textContent = "Running...";
 
   try {
-    let inputDFA;
-    try {
-      inputDFA = parseInputDFA();
-    } catch {
-      clearInputs();
-      resetOutput();
-      alert("Input is invalid!");
-      return;
-    }
-
+    const inputDFA = parseInputDFA();
     const output = parseOutput((await reduceDFA(inputDFA)).output, inputDFA.alphabet, inputDFA.stateCount);
-    if (!output.valid) {
-      clearInputs();
-      resetOutput();
-      alert("Input is invalid!");
-      return;
-    }
-
+    if (!output.valid) return invalidInput();
     renderOutput(output);
     renderGraphs(inputDFA, output);
   } catch (error) {
-    alert(error.message || "Could not run logic.exe.");
+    error.message ? alert(error.message) : invalidInput();
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "Submit";
   }
 });
 
-window.addEventListener("resize", () => {
-  if (lastOriginalDFA) originalGraph.draw(lastOriginalDFA, qLabel);
-  if (lastReducedDFA) reducedGraph.draw(lastReducedDFA, qLabel);
+addEventListener("resize", () => {
+  if (lastOriginalDFA) originalGraph.draw(lastOriginalDFA, DFAGraph.qLabel);
+  if (lastReducedDFA) reducedGraph.draw(lastReducedDFA, DFAGraph.qLabel);
   originalGraph.startPhysics();
   reducedGraph.startPhysics();
 });

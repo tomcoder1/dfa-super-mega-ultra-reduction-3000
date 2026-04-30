@@ -43,7 +43,7 @@ const DFAGraph = (() => {
         canvas.height = pixelHeight;
       }
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.setTransform(dpr, 0,0,dpr,0,0);
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, width, height);

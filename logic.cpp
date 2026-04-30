@@ -167,13 +167,11 @@ int main() {
     // 4. New DFA 
     vector<vector<int>> newTransitionTable(newNumberOfStates, vector<int>(numberOfSymbols));
     vector<int> newFinalStates;
-    vector<bool> isNewFinal(newNumberOfStates, false);
 
     // a. Generate final states
     for (int i = 0; i < newNumberOfStates; i++) {
         int currentState = newDFAStates[i][0];
         if (isFinal[currentState]) {
-            isNewFinal[i] = true;
             newFinalStates.push_back(i);
         }
     }

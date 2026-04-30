@@ -26,7 +26,7 @@ function parseInputDFA() {
     .map((line) => numbers(line));
 
   assert(Number.isInteger(stateCount) && stateCount > 0);
-  assert(alphabet.length && new Set(alphabet).size === alphabet.length);
+  assert(alphabet.length && alphabet.every((symbol) => symbol.length === 1) && new Set(alphabet).size === alphabet.length);
   assert(transitions.length === stateCount);
   assert(finalStates.every((state) => Number.isInteger(state) && state >= 0 && state < stateCount));
   transitions.forEach((row) => {
